@@ -33,3 +33,17 @@ poetry.lock
 poetry.toml
 
 pyproject.toml
+
+data/images/
+
+code/log/
+
+code/saved_models/
+
+nltk_data/tokenizers/
+
+code/submit/
+
+code/data/text_vector/
+
+__pycache__/
