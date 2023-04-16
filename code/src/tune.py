@@ -110,6 +110,48 @@ def set_args(args, options, trial):
         setattr(args, option, value)
     return args
 
+def load_skf_data(args, data, X_train, X_valid, y_train, y_valid):
+    if args.model in ('FM', 'FFM','DeepFM','FFDCN'):
+        fold_data = {
+                'X_train':X_train,
+                'X_valid': X_valid,
+                'y_train': y_train,
+                'y_valid': y_valid,
+                'test':  data['test'],
+                'field_dims': data['field_dims'],
+                'users':data['users'],
+                'books':data['books'],
+                'sub':data['sub'],
+                'idx2user': data['idx2user'],
+                'idx2isbn':data['idx2isbn'],
+                'user2idx':data['user2idx'],
+                'isbn2idx':data['isbn2idx'],
+                }
+        
+        fold_data = context_data_loader(args,fold_data)
+    elif args.model in ('NCF', 'WDN', 'DCN'):
+        fold_data = {
+            'X_train':X_train,
+            'X_valid': X_valid,
+            'y_train': y_train,
+            'y_valid': y_valid,
+            'field_dims': data['field_dims'],
+            'users':data['users'],
+            'books':data['books'],
+            'sub':data['sub'],
+            'idx2user': data['idx2user'],
+            'idx2isbn':data['idx2isbn'],
+            'user2idx':data['user2idx'],
+            'isbn2idx':data['isbn2idx'],
+            }
+        fold_data = dl_data_loader(args,fold_data)
+    elif args.model=='CNN_FM':
+        fold_data = image_data_loader(args, fold_data)
+    elif args.model=='DeepCoNN':
+        fold_data = text_data_loader(args, fold_data)
+    else: pass
+
+    return fold_data
 
 def objective(trial, args):
     option_path = f'/opt/ml/code/src/models/{args.model}/option.json'
@@ -174,7 +216,7 @@ def objective(trial, args):
     return log_score
 
 
-def objective_skf(trial, args):
+def objective_skf(trial, args, data):
     option_path = f'/opt/ml/code/src/models/{args.model}/option.json'
     with open(option_path) as f: options = json.load(f)
     args = set_args(args, options, trial)
@@ -201,11 +243,13 @@ def objective_skf(trial, args):
 
     return log_score
 
+
+
 def main(args):
     Setting.seed_everything(args.seed)
 
     if args.skf:
-            ######################## DATA LOAD
+        ######################## DATA LOAD
         print(f'--------------- {args.model} Load Data ---------------')
         if args.model in ('FM', 'FFM','DeepFM', 'FFDCN'): 
             data = context_data_load(args)
@@ -219,65 +263,39 @@ def main(args):
             data = text_data_load(args)
         else: pass
 
-        skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=arg.seed)
+        skf = StratifiedKFold(n_splits=args.n_splits, shuffle=True, random_state=args.seed)
         folds = []
         for train_idx, valid_idx in skf.split(data['train'].drop(['rating'], axis=1), data['train']['rating']):
             folds.append((train_idx, valid_idx))
 
-        for fold in range(0,10):
-        print(f'===================================={fold+1}============================================')
-        train_idx, valid_idx = folds[fold]
-        X_train = train_ratings.drop(['rating'],axis = 1).iloc[train_idx]
-        X_valid = train_ratings.drop(['rating'],axis = 1).iloc[valid_idx]
-        y_train = train_ratings['rating'].iloc[train_idx]
-        y_valid = train_ratings['rating'].iloc[valid_idx]
-
-        if args.model in ('FM', 'FFM','DeepFM','FFDCN'):
-            fold_data = {
-                    'X_train':X_train,
-                    'X_valid': X_valid,
-                    'y_train': y_train,
-                    'y_valid': y_valid,
-                    'field_dims':data['field_dims'],
-                    'users':data['users'],
-                    'books':data['books'],
-                    'sub':data['sub'],
-                    'idx2user': data['idx2user'],
-                    'idx2isbn':data['idx2isbn'],
-                    'user2idx':data['user2idx'],
-                    'isbn2idx':data['isbn2idx'],
-                    }
-            data = context_data_loader(args, data)   
-        elif args.model in ('NCF', 'WDN', 'DCN'):
+        for fold in range(0,args.n_splits):
+            print(f'===================================={fold+1}============================================')
+            train_idx, valid_idx = folds[fold]
+            X_train = data['train'].drop(['rating'],axis = 1).iloc[train_idx]
+            X_valid = data['train'].drop(['rating'],axis = 1).iloc[valid_idx]
+            y_train = data['train']['rating'].iloc[train_idx]
+            y_valid = data['train']['rating'].iloc[valid_idx]
             
+            fold_data = load_skf_data(args, data, X_train, X_valid, y_train, y_valid)
 
-            data = dl_data_loader(args, data)
-        elif args.model=='CNN_FM':
-            data = image_data_loader(args, data)
-        elif args.model=='DeepCoNN':
-            data = text_data_loader(args, data)
-        else: pass
+            sampler = optuna.samplers.TPESampler(seed=args.seed)
+            study = optuna.create_study(
+                study_name = 'cat_parameter_opt',
+                direction = 'minimize',
+                sampler = sampler,
+            )
 
+            study.optimize(lambda trial: objective_skf(trial, args, fold_data), n_trials=10)
 
-        fold_data = context_data_loader(args,fold_data)
+            sampler = optuna.samplers.TPESampler(seed=args.seed)
+            study = optuna.create_study(
+                study_name = f'{args.model}_parameter_opt',
+                direction = 'minimize',
+                sampler = sampler,
+            )
+            print("Best Score:", study.best_value)
+            print("Best trial", study.best_trial.params)
 
-    fold_data = context_data_loader(args,fold_data)
-        sampler = optuna.samplers.TPESampler(seed=42)
-        study = optuna.create_study(
-            study_name = 'cat_parameter_opt',
-            direction = 'minimize',
-            sampler = sampler,
-        )
-        study.optimize(lambda trial: objective_skf(trial, args), n_trials=10)
-
-        sampler = optuna.samplers.TPESampler(seed=args.seed)
-        study = optuna.create_study(
-            study_name = f'{args.model}_parameter_opt',
-            direction = 'minimize',
-            sampler = sampler,
-        )
-        print("Best Score:", study.best_value)
-        print("Best trial", study.best_trial.params)
 
     else:
         study.optimize(lambda trial: objective(trial, args), n_trials=10)
@@ -292,7 +310,6 @@ def main(args):
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
         predicts = test(args, model, data, setting)
-
 
         ######################## SAVE PREDICT
         print(f'--------------- SAVE {args.model} PREDICT ---------------')
@@ -323,9 +340,10 @@ if __name__ == "__main__":
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
     arg('--seed', type=int, default=42, help='seed 값을 조정할 수 있습니다.')
     arg('--use_best_model', type=bool, default=True, help='검증 성능이 가장 좋은 모델 사용여부를 설정할 수 있습니다.')
-
+    arg('--skf', type=bool, default=False, help='Stratified K-FOld 여부.')
 
     ############### TRAINING OPTION
+    arg('--n_splits', type=int, default=10, help='Stratified K-FOld 여부 개수')
     arg('--batch_size', type=int, default=1024, help='Batch size를 조정할 수 있습니다.')
     arg('--epochs', type=int, default=20, help='Epoch 수를 조정할 수 있습니다.')
     arg('--lr', type=float, default=1e-3, help='Learning Rate를 조정할 수 있습니다.')
