@@ -20,6 +20,25 @@ def age_map(x: int) -> int:
     else:
         return 6
 
+def rating_cnt_map(x: int) -> int:
+    x = int(x)
+    if x < 9:
+        return 1
+    elif x < 18:
+        return 2
+    elif x < 33:
+        return 3
+    elif x < 61:
+        return 4
+    elif x < 96:
+        return 5
+    elif x < 252:
+        return 6
+    elif x < 938:
+        return 7
+    else:
+        return 8
+
 def process_context_data(users, books, ratings1, ratings2):
     """
     Parameters
@@ -34,11 +53,11 @@ def process_context_data(users, books, ratings1, ratings2):
         test 데이터의 rating
     ----------
     """
-
-    users['location_city'] = users['location'].apply(lambda x: x.split(',')[0])
-    users['location_state'] = users['location'].apply(lambda x: x.split(',')[1])
-    users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
-    users = users.drop(['location'], axis=1)
+    if 'location' in users.columns:
+        users['location_city'] = users['location'].apply(lambda x: x.split(',')[0])
+        users['location_state'] = users['location'].apply(lambda x: x.split(',')[1])
+        users['location_country'] = users['location'].apply(lambda x: x.split(',')[2])
+        users = users.drop(['location'], axis=1)
 
     ratings = pd.concat([ratings1, ratings2]).reset_index(drop=True)
 
@@ -63,6 +82,9 @@ def process_context_data(users, books, ratings1, ratings2):
     train_df['age'] = train_df['age'].apply(age_map)
     test_df['age'] = test_df['age'].fillna(int(test_df['age'].mean()))
     test_df['age'] = test_df['age'].apply(age_map)
+    if 'rating_count' in train_df.columns:
+        train_df['rating_count'] = train_df['rating_count'].apply(rating_cnt_map)
+        test_df['rating_count'] = test_df['rating_count'].apply(rating_cnt_map)
 
     # book 파트 인덱싱
     category2idx = {v:k for k,v in enumerate(context_df['category'].unique())}
@@ -129,9 +151,17 @@ def context_data_load(args):
     books['isbn'] = books['isbn'].map(isbn2idx)
 
     idx, context_train, context_test = process_context_data(users, books, train, test)
-    field_dims = np.array([len(user2idx), len(isbn2idx),
+    
+    if 'rating_count' in users.columns:
+        field_dims = np.array([len(user2idx), len(isbn2idx),
+                            6, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),8 ,
+                            len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), 
+                            len(idx['author2idx'])], dtype=np.uint32)
+    else:
+        field_dims = np.array([len(user2idx), len(isbn2idx),
                             6, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
-                            len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), len(idx['author2idx'])], dtype=np.uint32)
+                            len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), 
+                            len(idx['author2idx'])], dtype=np.uint32)
 
     data = {
             'train':context_train,
