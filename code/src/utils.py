@@ -8,6 +8,26 @@ import logging
 import json
 from .models import *
 
+def set_args(args, options, trial):
+    print(f'--------------- Setting Experiement ---------------')
+    for option in options:
+        if options[option][0] == 'int':
+            if option == 'DCN_MLP_DIMS':
+                value = [trial.suggest_int(option, options[option][1], options[option][2])]
+                value = value * args.DCN_MLP_DIM_LAYERS
+            elif option == 'mlp_dims':
+                suggest = trial.suggest_int(option, options[option][1], options[option][2])
+                value = (suggest, suggest)
+            else:
+                value = trial.suggest_int(option, options[option][1], options[option][2])
+        elif options[option][0] == 'cat':
+            
+            value = trial.suggest_categorical(option, options[option][1])
+        else: pass
+        setattr(args, option, value)
+    return args
+
+
 def rmse(real: list, predict: list) -> float:
     '''
     [description]
@@ -48,6 +68,21 @@ def models_load(args, data):
         model = CNN_FM(args, data).to(args.device)
     elif args.model=='DeepCoNN':
         model = DeepCoNN(args, data).to(args.device)
+    elif args.model == 'DeepFM':
+        args.factor_dim = 5
+        args.dnn_hidden_units = 100
+        args.dropout_rate = 0.4
+        args.activation = "relu"
+        args.dnn_use_bn = False
+        model = DeepFM(args, data).to(args.device)
+    elif args.model == 'FFDCN':
+        args.FFM_EMBED_DIM = 5
+        args.DCN_EMBED_DIM = 5
+        args.DCN_MLP_DIM_LAYERS = 3
+        args.DCN_MLP_DIMS = [8]* args.DCN_MLP_DIM_LAYERS
+        args.DCN_DROPOUT = 0.2
+        args.DCN_NUM_LAYERS = 3
+        model = FFDCN(args, data).to(args.device)
     else:
         raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN]')
     return model

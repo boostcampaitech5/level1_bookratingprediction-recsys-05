@@ -1,13 +1,12 @@
 import time
 import argparse
 import pandas as pd
-from src.utils import Logger, Setting, models_load
+from src.utils import Logger, Setting, models_load, set_args
 from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import RMSELoss
-from src.train.trainer import  RMSELoss
 import pdb
 from sklearn.model_selection import StratifiedKFold
 import json
@@ -92,24 +91,6 @@ def valid(args, model, dataloader, loss_fn):
     return valid_loss
 
 # 모델에 옵션 파일을 읽어서 optuma 학습 환경 설정
-def set_args(args, options, trial):
-    print(f'--------------- Setting Experiement ---------------')
-    for option in options:
-        if options[option][0] == 'int':
-            if option == 'DCN_MLP_DIMS':
-                value = [trial.suggest_int(option, options[option][1], options[option][2])]
-                value = value * args.DCN_MLP_DIM_LAYERS
-            elif option == 'mlp_dims':
-                suggest = trial.suggest_int(option, options[option][1], options[option][2])
-                value = (suggest, suggest)
-            else:
-                value = trial.suggest_int(option, options[option][1], options[option][2])
-        elif options[option][0] == 'cat':
-            
-            value = trial.suggest_categorical(option, options[option][1])
-        else: pass
-        setattr(args, option, value)
-    return args
 
 def load_skf_data(args, data, X_train, X_valid, y_train, y_valid):
     if args.model in ('FM', 'FFM','DeepFM','FFDCN'):
@@ -343,7 +324,7 @@ def main(args):
             direction = 'minimize',
             sampler = sampler,
         )
-        with open ('/opt/ml/code/src/models/{args.model}/best_params.json') as f: json.dump(best_params, f)
+        with open ('/opt/ml/code/src/models/{args.model}/best_params.json','wb') as f: json.dump(best_params, f)
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
         predicts = test(args, model, data, setting)
