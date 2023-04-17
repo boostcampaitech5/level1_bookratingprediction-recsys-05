@@ -6,6 +6,7 @@ from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
+from src.data import cat_data_load, cat_data_split
 from src.train import train, test
 import pdb
 
@@ -26,6 +27,8 @@ def main(args):
         import nltk
         nltk.download('punkt')
         data = text_data_load(args)
+    elif args.model == 'Catboost':
+        data = cat_data_load(args)
     else:
         pass
 
@@ -47,6 +50,9 @@ def main(args):
     elif args.model=='DeepCoNN':
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
+        
+    elif args.model=='Catboost':
+        data = cat_data_split(args,data)
     else:
         pass
 
@@ -58,33 +64,51 @@ def main(args):
 
     logger = Logger(args, log_path)
     logger.save_args()
-
-
-    ######################## Model
-    print(f'--------------- INIT {args.model} ---------------')
-    model = models_load(args,data)
     
-
-    ######################## TRAIN
-    print(f'--------------- {args.model} TRAINING ---------------')
-    model = train(args, model, data, logger, setting)
-
-
-    ######################## INFERENCE
-    print(f'--------------- {args.model} PREDICT ---------------')
-    predicts = test(args, model, data, setting)
-
-
-    ######################## SAVE PREDICT
-    print(f'--------------- SAVE {args.model} PREDICT ---------------')
-    submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'FFDCN'):
+    if args.model =='Catboost':
+        
+        ######################## TRAIN
+        print(f'--------------- {args.model} TRAINING ---------------')
+        model.train()
+        model.predict_train()
+        
+        ######################## INFERENCE
+        print(f'--------------- {args.model} PREDICT ---------------')
+        predicts = model.predict()
+        submission = pd.read_csv(args.data_path + 'sample_submission.csv')
         submission['rating'] = predicts
-    else:
-        pass
+        
+        ######################## SAVE PREDICT
+        print(f'--------------- SAVE {args.model} PREDICT ---------------')
+        filename = setting.get_submit_filename(args)
+        submission.to_csv(filename, index=False)   
 
-    filename = setting.get_submit_filename(args)
-    submission.to_csv(filename, index=False)
+    else:
+        ######################## Model
+        print(f'--------------- INIT {args.model} ---------------')
+        model = models_load(args,data)
+        
+
+        ######################## TRAIN
+        print(f'--------------- {args.model} TRAINING ---------------')
+        model = train(args, model, data, logger, setting)
+
+
+        ######################## INFERENCE
+        print(f'--------------- {args.model} PREDICT ---------------')
+        predicts = test(args, model, data, setting)
+
+
+        ######################## SAVE PREDICT
+        print(f'--------------- SAVE {args.model} PREDICT ---------------')
+        submission = pd.read_csv(args.data_path + 'sample_submission.csv')
+        if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'FFDCN'):
+            submission['rating'] = predicts
+        else:
+            pass
+
+        filename = setting.get_submit_filename(args)
+        submission.to_csv(filename, index=False)
 
 
 if __name__ == "__main__":

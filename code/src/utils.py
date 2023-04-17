@@ -83,6 +83,8 @@ def models_load(args, data):
         args.DCN_DROPOUT = 0.2
         args.DCN_NUM_LAYERS = 3
         model = FFDCN(args, data).to(args.device)
+    elif args.model == 'Catboost':
+        model = Cat_Boost(args,data)
     else:
         raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN]')
     return model
