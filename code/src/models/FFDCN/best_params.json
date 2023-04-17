@@ -1,0 +1,1 @@
+{"FFM_EMBED_DIM": 14, "DCN_EMBED_DIM": 5, "DCN_MLP_DIM_LAYERS": 3, "DCN_MLP_DIMS": 6, "DCN_NUM_LAYERS": 2, "batch_size": 512, "lr": 0.009702573394120726, "weight_decay": 3.50339849115869e-05, "dropout": 0.3}

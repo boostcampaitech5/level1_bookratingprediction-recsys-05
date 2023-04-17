@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-
+import pdb
 
 # FM모델 등에서 활용되는 선형 결합 부분을 정의합니다.
 class FeaturesLinear(nn.Module):
@@ -38,6 +38,7 @@ class MultiLayerPerceptron(nn.Module):
     def __init__(self, input_dim, embed_dims, dropout, output_layer=True):
         super().__init__()
         layers = list()
+        if isinstance(embed_dims, int): embed_dims = (embed_dims, embed_dims)
         for embed_dim in embed_dims:
             layers.append(torch.nn.Linear(input_dim, embed_dim))
             layers.append(torch.nn.BatchNorm1d(embed_dim))

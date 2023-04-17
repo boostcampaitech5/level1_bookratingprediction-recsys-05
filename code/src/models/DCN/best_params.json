@@ -1,0 +1,1 @@
+{"embed_dim": 4, "DCN_MLP_DIM_LAYERS": 3, "args.mlp_dims": 12, "num_layers": 4, "batch_size": 512, "lr": 0.009323621351781481, "weight_decay": 3.550304858128306e-05, "dropout": 0.2}

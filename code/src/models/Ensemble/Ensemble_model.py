@@ -14,10 +14,9 @@ class Ensemble(nn.Module):
         dnn_use_bn: Boolean value. Whether use BatchNormalization before activation in DNN layer
     '''
     def __init__(self,
-                 args, models):
+                 args, models, data2model):
         super(Ensemble, self).__init__()
-        init_w = torch.randn(args.num_users, args.num_models)
-        init_w = torch.nn.functional.normalize(init_w, p=1, dim=1)
+        init_w = torch.ones(args.num_users, args.num_models) / args.num_models
         self.embedding = nn.Embedding(args.num_users, args.num_models)
         self.embedding.weight = torch.nn.Parameter(init_w)
 
@@ -25,10 +24,11 @@ class Ensemble(nn.Module):
         self._initialize_weights()
         self.num_models = args.num_models
 
-        self.models = [models]
-                  
+        self.models = models
+        self.data2model = data2model
+        
     def forward(self, inputs):
-
+        pdb.set_trace()
         user_emb = self.embedding(user_index)
         predict = [self.models[i](inputs[i]) for i in range(self.num_models)]
         

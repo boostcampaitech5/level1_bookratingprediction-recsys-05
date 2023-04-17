@@ -7,4 +7,3 @@ from .CNN_FM.CNN_FM_model import CNN_FM
 from .DeepCoNN.DeepCoNN_model import DeepCoNN
 from .DeepFM.DeepFM_model import DeepFM
 from .FFDCN.FFDCN_model import FFDCN
-from .Cat_Boost.Cat_Boost_model import Cat_Boost

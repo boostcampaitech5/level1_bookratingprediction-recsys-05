@@ -1,0 +1,1 @@
+{"factor_dim": 6, "dnn_hidden_units": 128, "activation": "relu", "batch_size": 1024, "lr": 0.007256556536786181, "weight_decay": 1.0325337616482043e-06, "dropout": 0.2}
