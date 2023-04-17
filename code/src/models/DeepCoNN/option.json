@@ -1,0 +1,7 @@
+{
+    "word_dim" : ["cat", [1024]],
+    "out_dim" : ["cat", [64, 96, 100, 128, 150, 200]],
+    "kernel_size" : ["int", 2, 3],
+    "conv_1d_out_dim,":  ["cat", [20, 30, 40, 50, 60, 70]],
+    "deepconn_latent_dim" :  ["int", 5, 15]
+}

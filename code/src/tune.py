@@ -6,7 +6,8 @@ from src.data import context_data_load, context_data_split, context_data_loader
 from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
-from src.train import train, test
+from src.train import RMSELoss
+from src.train.trainer import  RMSELoss
 import pdb
 from sklearn.model_selection import StratifiedKFold
 import json
@@ -21,7 +22,7 @@ import pdb
 import tqdm
 import torch
 
-def train(args, model, dataloader, logger, setting):
+def train(args, model, dataloader, logger, setting, fold, save = False):
     minimum_loss = 999999999
     if args.loss_fn == 'MSE':
         loss_fn = MSELoss()
@@ -58,10 +59,15 @@ def train(args, model, dataloader, logger, setting):
             total_loss += loss.item()
             batch +=1
             if args.scheduler: scheduler.step()
-
+            
+            
         valid_loss = valid(args, model, dataloader, loss_fn)
         print(f'Epoch: {epoch+1}, Train_loss: {total_loss/batch:.3f}, valid_loss: {valid_loss:.3f}')
         logger.log(epoch=epoch+1, train_loss=total_loss/batch, valid_loss=valid_loss)
+
+        if (minimum_loss > valid_loss) & (save == True):
+            minimum_loss = valid_loss
+            torch.save(model.state_dict(), f'/opt/ml/code/src/models/{args.model}/{best}_model_{fold}.pt')
     logger.close()
 
     return model, valid_loss
@@ -85,15 +91,6 @@ def valid(args, model, dataloader, loss_fn):
     valid_loss = total_loss/batch
     return valid_loss
 
-class RMSELoss(nn.Module):
-    def __init__(self):
-        super(RMSELoss, self).__init__()
-        self.eps = 1e-6
-    def forward(self, x, y):
-        criterion = MSELoss()
-        loss = torch.sqrt(criterion(x, y)+self.eps)
-        return loss
-
 # 모델에 옵션 파일을 읽어서 optuma 학습 환경 설정
 def set_args(args, options, trial):
     print(f'--------------- Setting Experiement ---------------')
@@ -102,9 +99,13 @@ def set_args(args, options, trial):
             if option == 'DCN_MLP_DIMS':
                 value = [trial.suggest_int(option, options[option][1], options[option][2])]
                 value = value * args.DCN_MLP_DIM_LAYERS
+            elif option == 'mlp_dims':
+                suggest = trial.suggest_int(option, options[option][1], options[option][2])
+                value = (suggest, suggest)
             else:
                 value = trial.suggest_int(option, options[option][1], options[option][2])
         elif options[option][0] == 'cat':
+            
             value = trial.suggest_categorical(option, options[option][1])
         else: pass
         setattr(args, option, value)
@@ -135,6 +136,7 @@ def load_skf_data(args, data, X_train, X_valid, y_train, y_valid):
             'X_valid': X_valid,
             'y_train': y_train,
             'y_valid': y_valid,
+            'test':  data['test'],
             'field_dims': data['field_dims'],
             'users':data['users'],
             'books':data['books'],
@@ -148,6 +150,22 @@ def load_skf_data(args, data, X_train, X_valid, y_train, y_valid):
     elif args.model=='CNN_FM':
         fold_data = image_data_loader(args, fold_data)
     elif args.model=='DeepCoNN':
+        fold_data = {
+            'X_train':X_train,
+            'X_valid': X_valid,
+            'y_train': y_train,
+            'y_valid': y_valid,
+            'test':  data['test'],
+            'users':data['users'],
+            'books':data['books'],
+            'sub':data['sub'],
+            'idx2user': data['idx2user'],
+            'idx2isbn':data['idx2isbn'],
+            'user2idx':data['user2idx'],
+            'isbn2idx':data['isbn2idx'],
+            'text_train':data['text_train'],
+            'text_test': data['text_test'],
+            }
         fold_data = text_data_loader(args, fold_data)
     else: pass
 
@@ -160,7 +178,6 @@ def objective(trial, args):
 
     ## 기본 실험 세팅
     args.batch_size = trial.suggest_categorical('BATCH_SIZE',[128, 256, 512, 1024])
-    args.epochs = 20  #trial.suggest_int('EPOCH',5,10)
     args.lr = trial.suggest_loguniform('LR',0.001,0.01)
     args.weight_decay = trial.suggest_loguniform('WEIGHT_DECAY',1e-07,5e-06)
     args.dropout = trial.suggest_categorical("DCN_DROPOUT",[0.2,0.25,0.3])
@@ -209,21 +226,20 @@ def objective(trial, args):
     ################모델 불러오기
     model = models_load(args, data)
     ################모델 학습
-    model, val_loss = train(args, model, data, logger, setting)
+    model, val_loss = train(args, model, data, logger, setting, False, None)
     ################학습 결과 보기
     log_score = val_loss
 
     return log_score
 
 
-def objective_skf(trial, args, data):
+def objective_skf(trial, args, data, fold):
     option_path = f'/opt/ml/code/src/models/{args.model}/option.json'
     with open(option_path) as f: options = json.load(f)
     args = set_args(args, options, trial)
 
     ## 기본 실험 세팅
     args.batch_size = trial.suggest_categorical('BATCH_SIZE',[128, 256, 512, 1024])
-    args.epochs = 20  #trial.suggest_int('EPOCH',5,10)
     args.lr = trial.suggest_loguniform('LR',0.001,0.01)
     args.weight_decay = trial.suggest_loguniform('WEIGHT_DECAY',1e-07,5e-06)
     args.dropout = trial.suggest_categorical("DCN_DROPOUT",[0.2,0.25,0.3])
@@ -237,7 +253,7 @@ def objective_skf(trial, args, data):
     ################모델 불러오기
     model = models_load(args, data)
     ################모델 학습
-    model, val_loss = train(args, model, data, logger, setting)
+    model, val_loss = train(args, model, data, logger, setting, fold, False,)
     ################학습 결과 보기
     log_score = val_loss
 
@@ -268,35 +284,56 @@ def main(args):
         for train_idx, valid_idx in skf.split(data['train'].drop(['rating'], axis=1), data['train']['rating']):
             folds.append((train_idx, valid_idx))
 
+        best_val = 9999
+
         for fold in range(0,args.n_splits):
             print(f'===================================={fold+1}============================================')
             train_idx, valid_idx = folds[fold]
-            X_train = data['train'].drop(['rating'],axis = 1).iloc[train_idx]
-            X_valid = data['train'].drop(['rating'],axis = 1).iloc[valid_idx]
-            y_train = data['train']['rating'].iloc[train_idx]
-            y_valid = data['train']['rating'].iloc[valid_idx]
-            
+            if args.model == 'DeepCoNN':
+                X_train = data['text_train'][['user_id', 'isbn', 'user_summary_merge_vector', 'item_summary_vector']].iloc[train_idx]
+                X_valid = data['text_train'][['user_id', 'isbn', 'user_summary_merge_vector', 'item_summary_vector']].iloc[valid_idx]
+                y_train = data['text_train']['rating'].iloc[train_idx]
+                y_valid = data['text_train']['rating'].iloc[valid_idx]
+            else:
+                X_train = data['train'].drop(['rating'],axis = 1).iloc[train_idx]
+                X_valid = data['train'].drop(['rating'],axis = 1).iloc[valid_idx]
+                y_train = data['train']['rating'].iloc[train_idx]
+                y_valid = data['train']['rating'].iloc[valid_idx]
+                
             fold_data = load_skf_data(args, data, X_train, X_valid, y_train, y_valid)
 
             sampler = optuna.samplers.TPESampler(seed=args.seed)
             study = optuna.create_study(
-                study_name = 'cat_parameter_opt',
+                study_name = '{args.model}_parameter_opt',
                 direction = 'minimize',
                 sampler = sampler,
             )
 
-            study.optimize(lambda trial: objective_skf(trial, args, fold_data), n_trials=10)
+            study.optimize(lambda trial: objective_skf(trial, args, fold_data, fold), n_trials=10)
 
             sampler = optuna.samplers.TPESampler(seed=args.seed)
-            study = optuna.create_study(
-                study_name = f'{args.model}_parameter_opt',
-                direction = 'minimize',
-                sampler = sampler,
-            )
             print("Best Score:", study.best_value)
             print("Best trial", study.best_trial.params)
+            
+            if best_val > study.best_trial.value:
+                best_val = study.best_trial.value
+                best_params = study.best_trial.params
+                with open (f'/opt/ml/code/src/models/{args.model}/best_params.json') as f: json.dump(best_params, f)
+        
+            for arg in best_params: setattr(args, arg, best_params[arg])
+            train(args, model, fold_data, logger, setting, fold, True)
+            predicts = test(args, model, data, setting)
 
+            ######################## SAVE PREDICT
+            print(f'--------------- SAVE {args.model} PREDICT ---------------')
+            submission = pd.read_csv(args.data_path + 'sample_submission.csv')
+            if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'FFDCN'):
+                submission['rating'] = predicts
+            else:
+                pass
 
+            filename = setting.get_submit_filename(args)
+            submission.to_csv(filename, index=False)
     else:
         study.optimize(lambda trial: objective(trial, args), n_trials=10)
 
@@ -306,7 +343,7 @@ def main(args):
             direction = 'minimize',
             sampler = sampler,
         )
-        
+        with open ('/opt/ml/code/src/models/{args.model}/best_params.json') as f: json.dump(best_params, f)
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
         predicts = test(args, model, data, setting)
@@ -345,7 +382,7 @@ if __name__ == "__main__":
     ############### TRAINING OPTION
     arg('--n_splits', type=int, default=10, help='Stratified K-FOld 여부 개수')
     arg('--batch_size', type=int, default=1024, help='Batch size를 조정할 수 있습니다.')
-    arg('--epochs', type=int, default=20, help='Epoch 수를 조정할 수 있습니다.')
+    arg('--epochs', type=int, default=10, help='Epoch 수를 조정할 수 있습니다.')
     arg('--lr', type=float, default=1e-3, help='Learning Rate를 조정할 수 있습니다.')
     arg('--loss_fn', type=str, default='RMSE', choices=['MSE', 'RMSE'], help='손실 함수를 변경할 수 있습니다.')
     arg('--optimizer', type=str, default='ADAM', choices=['SGD', 'ADAM'], help='최적화 함수를 변경할 수 있습니다.')
@@ -360,7 +397,7 @@ if __name__ == "__main__":
     arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN에서 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN에서 Dropout rate를 조정할 수 있습니다.')
     arg('--mlp_dims', type=list, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
-    arg('--scheduler', type=bool, default=False, help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
+    arg('--scheduler', type=bool, default=False, help='러닝 스케듈러 설정.')
 
     ############### DCN
     arg('--num_layers', type=int, default=3, help='에서 Cross Network의 레이어 수를 조정할 수 있습니다.')

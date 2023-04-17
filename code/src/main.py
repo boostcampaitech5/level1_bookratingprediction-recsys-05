@@ -7,7 +7,7 @@ from src.data import dl_data_load, dl_data_split, dl_data_loader
 from src.data import image_data_load, image_data_split, image_data_loader
 from src.data import text_data_load, text_data_split, text_data_loader
 from src.train import train, test
-
+import pdb
 
 def main(args):
     Setting.seed_everything(args.seed)
@@ -15,8 +15,9 @@ def main(args):
 
     ######################## DATA LOAD
     print(f'--------------- {args.model} Load Data ---------------')
-    if args.model in ('FM', 'FFM'):
+    if args.model in ('FM', 'FFM','DeepFM', 'FFDCN'):
         data = context_data_load(args)
+        
     elif args.model in ('NCF', 'WDN', 'DCN'):
         data = dl_data_load(args)
     elif args.model == 'CNN_FM':
@@ -31,10 +32,10 @@ def main(args):
 
     ######################## Train/Valid Split
     print(f'--------------- {args.model} Train/Valid Split ---------------')
-    if args.model in ('FM', 'FFM'):
+    if args.model in ('FM', 'FFM','DeepFM','FFDCN'):
         data = context_data_split(args, data)
         data = context_data_loader(args, data)
-
+        
     elif args.model in ('NCF', 'WDN', 'DCN'):
         data = dl_data_split(args, data)
         data = dl_data_loader(args, data)
@@ -62,7 +63,7 @@ def main(args):
     ######################## Model
     print(f'--------------- INIT {args.model} ---------------')
     model = models_load(args,data)
-
+    
 
     ######################## TRAIN
     print(f'--------------- {args.model} TRAINING ---------------')
@@ -77,7 +78,7 @@ def main(args):
     ######################## SAVE PREDICT
     print(f'--------------- SAVE {args.model} PREDICT ---------------')
     submission = pd.read_csv(args.data_path + 'sample_submission.csv')
-    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN'):
+    if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'FFDCN'):
         submission['rating'] = predicts
     else:
         pass
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='/opt/ml/data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN','DeepFM','FFDCN'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 
     ############### TRAINING OPTION
     arg('--batch_size', type=int, default=1024, help='Batch size를 조정할 수 있습니다.')
-    arg('--epochs', type=int, default=10, help='Epoch 수를 조정할 수 있습니다.')
+    arg('--epochs', type=int, default=20, help='Epoch 수를 조정할 수 있습니다.')
     arg('--lr', type=float, default=1e-3, help='Learning Rate를 조정할 수 있습니다.')
     arg('--loss_fn', type=str, default='RMSE', choices=['MSE', 'RMSE'], help='손실 함수를 변경할 수 있습니다.')
     arg('--optimizer', type=str, default='ADAM', choices=['SGD', 'ADAM'], help='최적화 함수를 변경할 수 있습니다.')
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     arg('--embed_dim', type=int, default=16, help='FM, FFM, NCF, WDN, DCN에서 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--dropout', type=float, default=0.2, help='NCF, WDN, DCN에서 Dropout rate를 조정할 수 있습니다.')
     arg('--mlp_dims', type=list, default=(16, 16), help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
-
+    arg('--scheduler', type=bool, default=False, help='NCF, WDN, DCN에서 MLP Network의 차원을 조정할 수 있습니다.')
 
     ############### DCN
     arg('--num_layers', type=int, default=3, help='에서 Cross Network의 레이어 수를 조정할 수 있습니다.')
