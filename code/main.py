@@ -65,6 +65,10 @@ def main(args):
     logger = Logger(args, log_path)
     logger.save_args()
     
+    ######################## Model
+    print(f'--------------- INIT {args.model} ---------------')
+    model = models_load(args,data)
+    
     if args.model =='Catboost':
         
         ######################## TRAIN
@@ -84,11 +88,6 @@ def main(args):
         submission.to_csv(filename, index=False)   
 
     else:
-        ######################## Model
-        print(f'--------------- INIT {args.model} ---------------')
-        model = models_load(args,data)
-        
-
         ######################## TRAIN
         print(f'--------------- {args.model} TRAINING ---------------')
         model = train(args, model, data, logger, setting)
