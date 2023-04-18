@@ -149,10 +149,10 @@ class Setting:
         filename : submit file을 저장할 경로를 반환합니다.
         이 때, 파일명은 submit/날짜_시간_모델명.csv 입니다.
         '''
-        if args.cal == -100:
+        if args.cal == False:
             path = self.make_dir("./submit/")
         else:
-            path = args.cal_path
+            path = args.cal_save_path
         filename = f'{path}{self.save_time}_{args.model}.csv'
         return filename
 

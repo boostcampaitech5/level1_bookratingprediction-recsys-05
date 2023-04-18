@@ -12,38 +12,95 @@ from main import main as m
 import pdb
 import os
 import random
+import time
+import shutil
+from sklearn.linear_model import LinearRegression
 
 
 def main(args):
     Setting.seed_everything(args.seed)
     
-    ######################## DIR CREATE
-    print(f'--------------- directory create ---------------')
-    train = pd.read_csv(args.data_path + 'train_ratings.csv')
-    train = train.sample(frac=1,random_state = args.cal)
-    train.reset_index(drop=True, inplace=True)
-    
-    k_fold = 5
-    fold_len=len(train)//k_fold
-    
-    directory = '/opt/ml/cal/'
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-    directory += str(args.cal)+"_"+str(k_fold)
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-        os.mkdir(directory+'/data/')
-        for i in range(k_fold):
-            os.mkdir(directory+f'/data/{i}')
-            start, end = i*fold_len, (i+1)*fold_len
-            if i==k_fold-1:
-                end+=len(train)%k_fold
-            train.iloc[start:end].to_csv(directory+f'/data/{i}/test_ratings.csv', index=False)
-            train.copy().drop(range(start,end)).to_csv(directory+f'/data/{i}/train_ratings.csv', index=False)
-        os.mkdir(directory+'/csv/')
+    def create_pred_csv(args):
+        ######################## DIR CREATE
+        print(f'--------------- directory create ---------------')
+        
+        k_fold = 5
+        
+        
+        ## 초기 디렉터리 만드는 코드
+        directory = '/opt/ml/cal/'
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        directory += str(args.cal_seed)+"_"+str(k_fold)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+            train = pd.read_csv(args.data_path + 'train_ratings.csv')
+            train = train.sample(frac=1,random_state = args.cal_seed)
+            train.reset_index(drop=True, inplace=True)   
+            train.to_csv(directory+'/train_ratings.csv')
+            os.mkdir(directory+'/data/')
+            fold_len=len(train)//k_fold
+            for i in range(k_fold):
+                os.mkdir(directory+f'/data/{i}')
+                start, end = i*fold_len, (i+1)*fold_len
+                if i==k_fold-1:
+                    end+=len(train)%k_fold
+                train.iloc[start:end].to_csv(directory+f'/data/{i}/test_ratings.csv', index=False)
+                train.copy().drop(range(start,end)).to_csv(directory+f'/data/{i}/train_ratings.csv', index=False)
+            os.mkdir(directory+'/csv/')
+            temp_value=int(time.time())
+            args.cal_save_path = directory+'/temp_'+str(temp_value)+'/'
+            os.mkdir(args.cal_save_path)
+            os.mkdir(directory+'/submit')
 
-    args.cal_path = directory+'/data/0/'
-    m(args)
+        for i in range(k_fold):
+            args.cal_path = directory+f'/data/{i}/'
+            m(args)
+        
+        now = time.localtime()
+        now_date = time.strftime('%Y%m%d', now)
+        now_hour = time.strftime('%X', now)
+        save_time = now_date + '_' + now_hour.replace(':', '')
+        pd.concat([*[pd.read_csv(args.cal_save_path + df_path) for df_path in os.listdir(args.cal_save_path)]]).to_csv(f'{directory}/csv/{save_time}_{args.model}.csv')
+        shutil.rmtree(args.cal_save_path)
+
+    def calcurate_model_weight(args):
+        X_data_path = f'/opt/ml/cal/{args.cal_seed}_5/csv/'
+        y_data_path = f'/opt/ml/cal/{args.cal_seed}_5/'
+        file_list = os.listdir(X_data_path)
+        
+        X_rating = pd.DataFrame()
+        y_rating = pd.read_csv(y_data_path + 'train_ratings.csv')['rating']
+
+        for i, file in enumerate(file_list):
+            if file.endswith(".csv"):
+                model_name = file
+                X_rating[model_name + '_rating'] = pd.read_csv(X_data_path + file)['rating']
+                X = X_rating.values
+                y = y_rating.values
+
+                model = LinearRegression()
+                model.fit(X, y)
+        submit_csv = pd.DataFrame()
+        for i, col in enumerate(X_rating.columns):
+            submit_csv[col] = model.coef_[i]
+        submit_csv['bias'] = model.intercept_
+        now = time.localtime()
+        now_date = time.strftime('%Y%m%d', now)
+        now_hour = time.strftime('%X', now)
+        save_time = now_date + '_' + now_hour.replace(':', '')
+        submit_csv.to_csv(f'/opt/ml/cal/{args.cal_seed}_5/submit/{save_time}_ensemble.csv')
+
+
+    if args.cal:
+        calcurate_model_weight(args)
+        pass
+    else:
+        create_pred_csv(args)
+    
+
+            
+    
     
     
     
@@ -60,7 +117,8 @@ if __name__ == "__main__":
 
 
     ############### CALCURATE.PY OPTION
-    arg('--cal', type=int, default=-100, help='디폴트값이 아닌 수를 부여하면 모델의 weight를 계산합니다.')
+    arg('--cal', type=bool, default=False, help='False면 모델 예측파일을 생성하고, True면 생성된 파일들을 바탕으로 앙상블 계수를 계산합니다.')
+    arg('--cal_seed', type=int, default=50, help='시드를 설정합니다')
 
     ############### BASIC OPTION
     arg('--data_path', type=str, default='/opt/ml/data/', help='Data path를 설정할 수 있습니다.')
