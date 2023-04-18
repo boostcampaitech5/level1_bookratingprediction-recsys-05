@@ -149,7 +149,7 @@ def train(args, model, dataloader, logger, setting, fold, save = False):
             minimum_loss = valid_loss
             if save == True:
                 minimum_loss = valid_loss
-                torch.save(model.state_dict(), f'/opt/ml/code/src/models/{args.model}/best_model{fold}.pt')
+                torch.save(model.state_dict(), f'/opt/ml/code/src/models/{args.model}/best_model{fold}.pth')
     logger.close()
 
     return model, minimum_loss
@@ -293,7 +293,7 @@ def objective_CatBoost(trial, args, data):
     model.train()
     
     ################학습 결과 보기
-    log_score = model.predict_train().values()[0]
+    log_score = list( model.predict_train().values())[0]
     return log_score
 
 def objective_skf(trial, args, data, fold):
@@ -408,7 +408,7 @@ def main(args):
         print(f'End with RMSE:{loss}')
         print(f'--------------- {args.model} PREDICT ---------------')
         if args.model != "catboost":
-            model.load_state_dict(f"/opt/ml/code/src/models/{args.model}/best_model.pt")
+            model.load_state_dict(f"/opt/ml/code/src/models/{args.model}/best_model.pth")
 
         predicts = test(args, model, data, setting)
 
