@@ -8,3 +8,4 @@ from .DeepCoNN.DeepCoNN_model import DeepCoNN
 from .DeepFM.DeepFM_model import DeepFM
 from .FFDCN.FFDCN_model import FFDCN
 from .Cat_Boost.Cat_Boost_model import Cat_Boost
+from .Ensemble.Ensemble_model import Ensemble

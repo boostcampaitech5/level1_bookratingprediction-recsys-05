@@ -51,7 +51,7 @@ def rmse(real: list, predict: list) -> float:
 
 def ensemble_load(args, models, ):
     model = Ensemble(args, models)
-
+    return model
 def models_load(args, data):
     '''
     [description]
