@@ -129,13 +129,14 @@ def context_data_load(args):
     books = pd.read_csv(args.data_path + 'books.csv')
     try:
         if args.cal_seed:
-            train = pd.read_csv(args.data_path + 'train_ratings.csv')
-            test = pd.read_csv(args.data_path + 'test_ratings.csv')
-            sub = pd.read_csv(args.data_path + 'sample_submission.csv')
+            train = pd.read_csv(args.cal_path + 'train_ratings.csv')
+            test = pd.read_csv(args.cal_path + 'test_ratings.csv')
+            sub = pd.read_csv(args.cal_path + 'test_ratings.csv')
+
     except:
-        train = pd.read_csv(args.cal_path + 'train_ratings.csv')
-        test = pd.read_csv(args.cal_path + 'test_ratings.csv')
-        sub = pd.read_csv(args.cal_path + 'test_ratings.csv')
+        train = pd.read_csv(args.data_path + 'train_ratings.csv')
+        test = pd.read_csv(args.data_path + 'test_ratings.csv')
+        sub = pd.read_csv(args.data_path + 'sample_submission.csv')
 
     ids = pd.concat([train['user_id'], sub['user_id']]).unique()
     isbns = pd.concat([train['isbn'], sub['isbn']]).unique()
