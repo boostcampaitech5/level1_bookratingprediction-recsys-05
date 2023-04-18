@@ -7,7 +7,7 @@ import torch.nn as nn
 import logging
 import json
 from .models import *
-
+import pdb
 def set_args(args, options, trial):
     print(f'--------------- Setting Experiement ---------------')
     for option in options:
@@ -20,9 +20,15 @@ def set_args(args, options, trial):
                 value = (suggest, suggest)
             else:
                 value = trial.suggest_int(option, options[option][1], options[option][2])
+
         elif options[option][0] == 'cat':
-            
             value = trial.suggest_categorical(option, options[option][1])
+
+        elif options[option][0] == 'log':
+            value = trial.suggest_loguniform(option, options[option][1], options[option][2])
+
+        elif options[option][0] == 'float':
+            value = trial.suggest_float(option, options[option][1], options[option][2])
         else: pass
         setattr(args, option, value)
     return args
@@ -43,6 +49,8 @@ def rmse(real: list, predict: list) -> float:
     pred = np.array(predict)
     return np.sqrt(np.mean((real-pred) ** 2))
 
+def ensemble_load(args, models, ):
+    model = Ensemble(args, models)
 
 def models_load(args, data):
     '''
@@ -83,10 +91,10 @@ def models_load(args, data):
         args.DCN_DROPOUT = 0.2
         args.DCN_NUM_LAYERS = 3
         model = FFDCN(args, data).to(args.device)
-    elif args.model == 'Catboost':
+    elif args.model == 'Cat_Boost':
         model = Cat_Boost(args,data)
     else:
-        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN]')
+        raise ValueError('MODEL is not exist : select model in [FM,FFM,NCF,WDN,DCN,CNN_FM,DeepCoNN,CatBoost]')
     return model
 
 

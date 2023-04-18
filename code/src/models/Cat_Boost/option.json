@@ -1,0 +1,10 @@
+{
+    "bagging_temperature" : ["log", 0.01, 100.00],
+    "n_estimators": ["int", 1000, 10000],
+    "max_depth": ["int", 4, 16],
+    "random_strength" : ["int",0, 100],
+    "l2_leaf_reg": ["float", 1e-8, 3e-5],
+    "min_child_samples": ["int", 5, 100],
+    "max_bin": ["int",  200, 500],
+    "od_type": ["cat", ["IncToDec", "Iter"]]
+}

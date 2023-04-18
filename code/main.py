@@ -27,7 +27,7 @@ def main(args):
         import nltk
         nltk.download('punkt')
         data = text_data_load(args)
-    elif args.model == 'Catboost':
+    elif args.model == 'Cat_Boost':
         data = cat_data_load(args)
     else:
         pass
@@ -51,7 +51,7 @@ def main(args):
         data = text_data_split(args, data)
         data = text_data_loader(args, data)
         
-    elif args.model=='Catboost':
+    elif args.model=='Cat_Boost':
         data = cat_data_split(args,data)
     else:
         pass
@@ -78,6 +78,7 @@ def main(args):
         
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
+        model = model.best_estimator_
         predicts = model.predict()
         submission = pd.read_csv(args.data_path + 'sample_submission.csv')
         submission['rating'] = predicts
@@ -166,6 +167,15 @@ if __name__ == "__main__":
     arg('--word_dim', type=int, default=768, help='DEEP_CONN에서 1D conv의 입력 크기를 조정할 수 있습니다.')
     arg('--out_dim', type=int, default=32, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
 
+        ############### Cat_Boost
+    arg('--bagging_temperature', type=float, default=75)
+    arg('--n_estimators', type=int, default=8492 )
+    arg('--max_depth', type=int, default=6 )
+    arg('--random_strength', type=int, default=18 )
+    arg('--l2_leaf_reg', type=float, default=5.51030125050448e-06)
+    arg('--min_child_samples', type=int, default=34)
+    arg('--max_bin', type=int, default=34)
+    arg('--od_type', type=str, default="ncToDec")
 
     args = parser.parse_args()
     main(args)

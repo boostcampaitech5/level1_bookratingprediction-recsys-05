@@ -13,13 +13,20 @@ class Cat_Boost():
         self.y_valid = data['y_valid']
         self.sub = data['sub']
         self.cat_features = list(range(0, self.X_train.shape[1]))
-
-        self.epochs = args.epochs
-        self.learning_rate = args.lr
-        self.seed = args.seed
-
-        self.model = CatBoostRegressor(iterations=self.epochs, depth=6, learning_rate=self.learning_rate, random_seed=self.seed,  
-            verbose=50)
+        self.param = {
+            "random_state":args.seed,
+            'learning_rate' : args.lr,
+            'bagging_temperature' :args.bagging_temperature,
+            "n_estimators": args.n_estimators,
+            "max_depth": args.max_depth,
+            'random_strength' : args.random_strength,
+            "l2_leaf_reg": args.l2_leaf_reg,
+            "min_child_samples": args.min_child_samples,
+            "max_bin": args.max_bin,
+            'od_type': args.od_type,
+            }
+        
+        self.model = CatBoostRegressor(**self.param, task_type = 'GPU', verbose=50)
         
     def train(self):
         self.model.fit(
