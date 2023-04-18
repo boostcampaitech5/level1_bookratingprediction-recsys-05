@@ -43,3 +43,12 @@ class Cat_Boost():
         predicts = self.model.predict(self.sub)
         return predicts
     
+    def predict_data(self, x):
+        return  self.model.predict(x)
+    
+    def save_weight(self, path):
+        self.model.save_model(path)
+
+    def load_weight(self,path):
+        self.model.load_model(path)
+        return self.model
