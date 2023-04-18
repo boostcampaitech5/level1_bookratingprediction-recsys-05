@@ -127,11 +127,12 @@ def context_data_load(args):
     ######################## DATA LOAD
     users = pd.read_csv(args.data_path + 'users.csv')
     books = pd.read_csv(args.data_path + 'books.csv')
-    if args.cal == -100:
-        train = pd.read_csv(args.data_path + 'train_ratings.csv')
-        test = pd.read_csv(args.data_path + 'test_ratings.csv')
-        sub = pd.read_csv(args.data_path + 'sample_submission.csv')
-    else:
+    try:
+        if args.cal_seed:
+            train = pd.read_csv(args.data_path + 'train_ratings.csv')
+            test = pd.read_csv(args.data_path + 'test_ratings.csv')
+            sub = pd.read_csv(args.data_path + 'sample_submission.csv')
+    except:
         train = pd.read_csv(args.cal_path + 'train_ratings.csv')
         test = pd.read_csv(args.cal_path + 'test_ratings.csv')
         sub = pd.read_csv(args.cal_path + 'test_ratings.csv')
