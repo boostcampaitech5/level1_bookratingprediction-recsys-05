@@ -69,7 +69,8 @@ def main(args):
     print(f'--------------- INIT {args.model} ---------------')
     model = models_load(args,data)
     
-    if args.model =='Catboost':
+    
+    if args.model =='Cat_Boost':
         
         ######################## TRAIN
         print(f'--------------- {args.model} TRAINING ---------------')
@@ -78,7 +79,6 @@ def main(args):
         
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
-        model = model.best_estimator_
         predicts = model.predict()
         submission = pd.read_csv(args.data_path + 'sample_submission.csv')
         submission['rating'] = predicts
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     ############### BASIC OPTION
     arg('--data_path', type=str, default='/opt/ml/data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN','DeepFM','FFDCN','Catboost'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN','DeepFM','FFDCN','Cat_Boost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     arg('--l2_leaf_reg', type=float, default=5.51030125050448e-06)
     arg('--min_child_samples', type=int, default=34)
     arg('--max_bin', type=int, default=34)
-    arg('--od_type', type=str, default="ncToDec")
+    arg('--od_type', type=str, default="IncToDec")
 
     args = parser.parse_args()
     main(args)

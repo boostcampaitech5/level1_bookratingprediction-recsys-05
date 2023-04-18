@@ -408,7 +408,10 @@ def main(args):
         print(f'End with RMSE:{loss}')
         print(f'--------------- {args.model} PREDICT ---------------')
         if args.model != "catboost":
-            model.load_state_dict(f"/opt/ml/code/src/models/{args.model}/best_model.pth")
+            
+            state_dict = torch.load(f"/opt/ml/code/src/models/{args.model}/best_model.pth")
+            state_dict = state_dict.copy()
+            model.load_state_dict(state_dict)
 
         predicts = test(args, model, data, setting)
 
@@ -425,7 +428,6 @@ def main(args):
         model = models_load(args, data)
         model.train()
 
-        model = model.best_estimator_
         model.save_model(f"/opt/ml/code/src/models/{args.model}/best_model.cbm")
         predicts = model.predict()
         submission = pd.read_csv(args.data_path + 'sample_submission.csv')
