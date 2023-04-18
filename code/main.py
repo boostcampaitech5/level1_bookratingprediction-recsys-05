@@ -76,7 +76,7 @@ def main(args):
         print(f'--------------- {args.model} TRAINING ---------------')
         model.train()
         model.predict_train()
-        
+        model.save_model(f"/opt/ml/code/saved_models/{setting.save_time}_{args.model}_model.cbm")
         ######################## INFERENCE
         print(f'--------------- {args.model} PREDICT ---------------')
         predicts = model.predict()

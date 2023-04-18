@@ -1,0 +1,4 @@
+{
+    "embed_dim" : ["int", 8, 24],
+    "mlp_dims" : ["int", 8, 24]
+}

@@ -49,8 +49,8 @@ def rmse(real: list, predict: list) -> float:
     pred = np.array(predict)
     return np.sqrt(np.mean((real-pred) ** 2))
 
-def ensemble_load(args, models, ):
-    model = Ensemble(args, models)
+def ensemble_load(args):
+    model = Ensemble(args)
     return model
 def models_load(args, data):
     '''
