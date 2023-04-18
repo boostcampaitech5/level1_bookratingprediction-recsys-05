@@ -101,8 +101,9 @@ def main(args):
 
         ######################## SAVE PREDICT
         print(f'--------------- SAVE {args.model} PREDICT ---------------')
-        if args.cal==False:
-            submission = pd.read_csv(args.data_path + 'sample_submission.csv')
+        try:
+            if args.cal==False:
+                submission = pd.read_csv(args.data_path + 'sample_submission.csv')
         else:
             submission = pd.read_csv(args.cal_path + 'test_ratings.csv')
         if args.model in ('FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN', 'FFDCN'):
