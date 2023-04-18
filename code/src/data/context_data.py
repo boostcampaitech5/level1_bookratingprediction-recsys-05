@@ -154,12 +154,12 @@ def context_data_load(args):
     
     if 'rating_count' in users.columns:
         field_dims = np.array([len(user2idx), len(isbn2idx),
-                            6, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),8 ,
+                            7, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),9 ,
                             len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), 
                             len(idx['author2idx'])], dtype=np.uint32)
     else:
         field_dims = np.array([len(user2idx), len(isbn2idx),
-                            6, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
+                            7, len(idx['loc_city2idx']), len(idx['loc_state2idx']), len(idx['loc_country2idx']),
                             len(idx['category2idx']), len(idx['publisher2idx']), len(idx['language2idx']), 
                             len(idx['author2idx'])], dtype=np.uint32)
 
