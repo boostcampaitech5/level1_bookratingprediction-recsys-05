@@ -293,7 +293,7 @@ def objective_CatBoost(trial, args, data):
     model.train()
     
     ################학습 결과 보기
-    log_score = model.predict_train()
+    log_score = model.predict_train().values()[0]
     return log_score
 
 def objective_skf(trial, args, data, fold):
