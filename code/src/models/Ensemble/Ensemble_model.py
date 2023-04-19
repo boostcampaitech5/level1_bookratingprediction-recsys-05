@@ -44,14 +44,17 @@ class Ensemble2(nn.Module):
         dnn_use_bn: Boolean value. Whether use BatchNormalization before activation in DNN layer
     '''
     def __init__(self,args):
-        super(Ensemble, self).__init__()
-        self.linear = nn.Linear(in_features = args.num_models, out_features =  1)
+        super(Ensemble2, self).__init__()
+        self.linear = nn.Sequential(
+            nn.Linear(in_features = args.num_models, out_features = args.num_models),
+            nn.Linear(args.num_models, 1),
+            nn.ReLU()
+        )
+        
         
 
         #self.data2model = data2model
         
     def forward(self, x):
-        x = self.linear(x)
-        x = F.relu(x)
-        return x
+        return self.linear(x)
   

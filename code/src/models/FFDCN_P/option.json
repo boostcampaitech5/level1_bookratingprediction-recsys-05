@@ -1,0 +1,7 @@
+{
+    "FFM_EMBED_DIM" : ["int", 3, 32],
+    "DCN_EMBED_DIM" : ["int", 1, 24],
+    "DCN_MLP_DIM_LAYERS" : ["int", 1,3],
+    "DCN_MLP_DIMS" : ["int", 1,16],
+    "DCN_NUM_LAYERS" : ["int", 1,5]
+}

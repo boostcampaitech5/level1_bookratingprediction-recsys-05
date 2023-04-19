@@ -15,7 +15,17 @@ def age_map(x: int) -> int:
 	elif 60 <= x < 70: return 6
 	elif 70 <= x < 100: return 7
 	else: return 8
-    
+        
+def change_count(x):
+    if x < 2: return 0 
+    elif 2 <= x < 3: return 1
+    elif 3 <= x < 5: return 2
+    elif 5 <= x < 7: return 3 
+    elif 7 <= x < 10: return 4
+    elif 10 <= x < 30: return 5 
+    elif 30 <= x < 100: return 6
+    else: return 7
+
 def cat_data_load(args):
     users = pd.read_csv(args.data_path + 'users.csv')
     books = pd.read_csv(args.data_path + 'books.csv')
