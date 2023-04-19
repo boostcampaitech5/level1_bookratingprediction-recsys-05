@@ -9,6 +9,7 @@ from src.data import text_data_load, text_data_split, text_data_loader
 from src.data import cat_data_load, cat_data_split
 from src.train import train, test
 from main import main as m
+from kfold import main as k
 import pdb
 import os
 import random
@@ -48,43 +49,52 @@ def main(args):
                 train.iloc[start:end].to_csv(directory+f'/data/{i}/test_ratings.csv', index=False)
                 train.copy().drop(range(start,end)).to_csv(directory+f'/data/{i}/train_ratings.csv', index=False)
             os.mkdir(directory+'/csv/')
-            temp_value=int(time.time())
-            args.cal_save_path = directory+'/temp_'+str(temp_value)+'/'
-            os.mkdir(args.cal_save_path)
             os.mkdir(directory+'/submit')
+        temp_value=int(time.time())
+        args.cal_save_path = directory+'/temp_'+str(temp_value)+'/'
+        os.mkdir(args.cal_save_path)
 
         for i in range(k_fold):
             args.cal_path = directory+f'/data/{i}/'
-            m(args)
+            args.cal_iter=i
+            if args.connect=='main.py':
+                m(args)
+            elif args.connect=='kfold.py':
+                k(args)
         
         now = time.localtime()
         now_date = time.strftime('%Y%m%d', now)
         now_hour = time.strftime('%X', now)
         save_time = now_date + '_' + now_hour.replace(':', '')
+               
         pd.concat([*[pd.read_csv(args.cal_save_path + df_path) for df_path in os.listdir(args.cal_save_path)]]).to_csv(f'{directory}/csv/{save_time}_{args.model}.csv')
         shutil.rmtree(args.cal_save_path)
 
     def calcurate_model_weight(args):
+        print(f'--------------- READ CSV ---------------')
         X_data_path = f'/opt/ml/cal/{args.cal_seed}_5/csv/'
         y_data_path = f'/opt/ml/cal/{args.cal_seed}_5/'
         file_list = os.listdir(X_data_path)
         
         X_rating = pd.DataFrame()
         y_rating = pd.read_csv(y_data_path + 'train_ratings.csv')['rating']
-
+        print(f'--------------- LR MODEL FIT ---------------')
         for i, file in enumerate(file_list):
             if file.endswith(".csv"):
                 model_name = file
-                X_rating[model_name + '_rating'] = pd.read_csv(X_data_path + file)['rating']
+                X_rating[model_name] = pd.read_csv(X_data_path + file)['rating']
                 X = X_rating.values
                 y = y_rating.values
 
-                model = LinearRegression()
-                model.fit(X, y)
+        model = LinearRegression()
+        model.fit(X, y)
+        print(f'--------------- SUBMIT ---------------')
         submit_csv = pd.DataFrame()
+        print(X_rating.columns)
+        print(model.coef_, model.intercept_)
         for i, col in enumerate(X_rating.columns):
-            submit_csv[col] = model.coef_[i]
-        submit_csv['bias'] = model.intercept_
+            submit_csv[col] = [round(model.coef_[i], 3)]
+        submit_csv['bias'] = [model.intercept_]
         now = time.localtime()
         now_date = time.strftime('%Y%m%d', now)
         now_hour = time.strftime('%X', now)
@@ -119,11 +129,12 @@ if __name__ == "__main__":
     ############### CALCURATE.PY OPTION
     arg('--cal', type=bool, default=False, help='False면 모델 예측파일을 생성하고, True면 생성된 파일들을 바탕으로 앙상블 계수를 계산합니다.')
     arg('--cal_seed', type=int, default=50, help='시드를 설정합니다')
+    arg('--connect', type=str, default='main.py', choices=['main.py','kfold.py'])
 
     ############### BASIC OPTION
     arg('--data_path', type=str, default='/opt/ml/data/', help='Data path를 설정할 수 있습니다.')
     arg('--saved_model_path', type=str, default='./saved_models', help='Saved Model path를 설정할 수 있습니다.')
-    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN','DeepFM','FFDCN','Catboost'],
+    arg('--model', type=str, choices=['FM', 'FFM', 'NCF', 'WDN', 'DCN', 'CNN_FM', 'DeepCoNN','DeepFM','FFDCN','Cat_Boost'],
                                 help='학습 및 예측할 모델을 선택할 수 있습니다.')
     arg('--data_shuffle', type=bool, default=True, help='데이터 셔플 여부를 조정할 수 있습니다.')
     arg('--test_size', type=float, default=0.2, help='Train/Valid split 비율을 조정할 수 있습니다.')
@@ -160,13 +171,16 @@ if __name__ == "__main__":
 
 
     ############### DeepCoNN
-    arg('--vector_create', type=bool, default=True, help='DEEP_CONN에서 text vector 생성 여부를 조정할 수 있으며 최초 학습에만 True로 설정하여야합니다.')
+    arg('--vector_create', type=bool, default=True, help='DEEP_CONN에서 text vector 생성 여부를 Q조정할 수 있으며 최초 학습에만 True로 설정하여야합니다.')
     arg('--deepconn_embed_dim', type=int, default=32, help='DEEP_CONN에서 user와 item에 대한 embedding시킬 차원을 조정할 수 있습니다.')
     arg('--deepconn_latent_dim', type=int, default=10, help='DEEP_CONN에서 user/item/image에 대한 latent 차원을 조정할 수 있습니다.')
     arg('--conv_1d_out_dim', type=int, default=50, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
     arg('--kernel_size', type=int, default=3, help='DEEP_CONN에서 1D conv의 kernel 크기를 조정할 수 있습니다.')
     arg('--word_dim', type=int, default=768, help='DEEP_CONN에서 1D conv의 입력 크기를 조정할 수 있습니다.')
     arg('--out_dim', type=int, default=32, help='DEEP_CONN에서 1D conv의 출력 크기를 조정할 수 있습니다.')
+    
+    arg('--n_splits', type=int, default=5, help='K-Fold를 조정할 수 있습니다.')
+
 
         ############### Cat_Boost
     arg('--bagging_temperature', type=float, default=75)
@@ -176,7 +190,7 @@ if __name__ == "__main__":
     arg('--l2_leaf_reg', type=float, default=5.51030125050448e-06)
     arg('--min_child_samples', type=int, default=34)
     arg('--max_bin', type=int, default=34)
-    arg('--od_type', type=str, default="ncToDec")
+    arg('--od_type', type=str, default="IncToDec")
 
     args = parser.parse_args()
     main(args)
