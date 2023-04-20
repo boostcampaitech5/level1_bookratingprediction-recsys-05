@@ -16,6 +16,7 @@ import random
 import time
 import shutil
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
 
 def main(args):
@@ -72,29 +73,30 @@ def main(args):
 
     def calcurate_model_weight(args):
         print(f'--------------- READ CSV ---------------')
-        X_data_path = f'/opt/ml/cal/{args.cal_seed}_5/csv/'
-        y_data_path = f'/opt/ml/cal/{args.cal_seed}_5/'
+        X_data_path = f'/opt/ml/cal/50_5/csv/'
+        y_data_path = f'/opt/ml/cal/50_5/'
         file_list = os.listdir(X_data_path)
-        
+
+        df = pd.read_csv(y_data_path + 'train_ratings.csv').reset_index().drop('index',axis=1)
+        # df = df.sort_values(by=list(df.columns)).reset_index().drop('index',axis=1)
+        y_rating =df['rating']
         X_rating = pd.DataFrame()
-        y_rating = pd.read_csv(y_data_path + 'train_ratings.csv')['rating']
-        print(f'--------------- LR MODEL FIT ---------------')
         for i, file in enumerate(file_list):
             if file.endswith(".csv"):
                 model_name = file
-                X_rating[model_name] = pd.read_csv(X_data_path + file)['rating']
-                X = X_rating.values
-                y = y_rating.values
-
+                df = pd.read_csv(X_data_path + file, index_col=0).reset_index().drop('index',axis=1)
+                # df = df.sort_values(by=list(df.columns)).reset_index().drop('index',axis=1)
+                X_rating[model_name] = df['rating']
+        X = X_rating.values
+        y = y_rating.values
         model = LinearRegression()
         model.fit(X, y)
-        print(f'--------------- SUBMIT ---------------')
         submit_csv = pd.DataFrame()
-        print(X_rating.columns)
-        print(model.coef_, model.intercept_)
         for i, col in enumerate(X_rating.columns):
-            submit_csv[col] = [round(model.coef_[i], 3)]
-        submit_csv['bias'] = [model.intercept_]
+            submit_csv[col] = [model.coef_[i], mean_squared_error(y_rating, X_rating[col])**0.5]
+        d = eval('+'.join([f"X_rating['{col}']*{c}" for c,col in zip(model.coef_, X_rating.columns)]+["model.intercept_"]))
+        total_rmse = mean_squared_error(y_rating, d)**0.5
+        submit_csv['bias'] = [model.intercept_, total_rmse]
         now = time.localtime()
         now_date = time.strftime('%Y%m%d', now)
         now_hour = time.strftime('%X', now)
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='parser')
     arg = parser.add_argument
 
-
+    arg('--use_best_p', type=bool, default=False)
     ############### CALCURATE.PY OPTION
     arg('--cal', type=bool, default=False, help='False면 모델 예측파일을 생성하고, True면 생성된 파일들을 바탕으로 앙상블 계수를 계산합니다.')
     arg('--cal_seed', type=int, default=50, help='시드를 설정합니다')
