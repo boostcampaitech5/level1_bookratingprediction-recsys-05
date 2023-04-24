@@ -64,3 +64,122 @@
 
 
 ## 🗂️ Folder Structure
+
+```
+level1_bookratingprediction-recsys-05
+├─ Catboost_ipy.ipynb
+├─ code
+│  ├─ cal_mw.py
+│  ├─ deep_ensemble.py
+│  ├─ ensemble.py
+│  ├─ kfold.py
+│  ├─ main.py
+│  ├─ requirement.txt
+│  └─ src
+│     ├─ data
+│     │  ├─ cat_data.py
+│     │  ├─ context_data.py
+│     │  ├─ dl_data.py
+│     │  ├─ ensemble_data.py
+│     │  ├─ image_data.py
+│     │  ├─ text_data.py
+│     │  ├─ __init__.py
+│     ├─ deep_ensemble.py
+│     ├─ ensembles
+│     │  ├─ ensembles.py
+│     ├─ models
+│     │  ├─ Cat_Boost
+│     │  │  ├─ Cat_Boost_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ CNN_FM
+│     │  │  ├─ CNN_FM_model.py
+│     │  │  ├─ __init__.py
+│     │  ├─ DCN
+│     │  │  ├─ best_model.pt
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ DCN_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ DCN_P
+│     │  │  ├─ best_model.pt
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ DCN_P_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ DeepCoNN
+│     │  │  ├─ best_model.pt
+│     │  │  ├─ best_params.json
+│     │  │  ├─ DeepCoNN_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ DeepFM
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ DeepFM_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ Ensemble
+│     │  │  ├─ Ensemble_model.py
+│     │  │  ├─ __init__.py
+│     │  ├─ FFDCN
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ FFDCN_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ FFDCN_P
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ FFDCN_Parallel_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ FFM
+│     │  │  ├─ best_model.pt
+│     │  │  ├─ best_params.json
+│     │  │  ├─ FFM_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ FM
+│     │  │  ├─ best_model.pt
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ FM_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ NCF
+│     │  │  ├─ best_params.json
+│     │  │  ├─ NCF_model.py
+│     │  │  ├─ option.json
+│     │  │  ├─ __init__.py
+│     │  ├─ WDN
+│     │  │  ├─ .ipynb_checkpoints
+│     │  │  │  └─ WDN_model-checkpoint.py
+│     │  │  ├─ best_model.pth
+│     │  │  ├─ best_params.json
+│     │  │  ├─ option.json
+│     │  │  ├─ WDN_model.py
+│     │  │  ├─ __init__.py
+│     │  ├─ __init__.py
+│     ├─ train
+│     │  ├─ trainer.py
+│     │  ├─ __init__.py
+│     ├─ tune.py
+│     ├─ utils.py
+│     ├─ __init__.py
+├─ context_data.py
+├─ data
+│  ├─ books.csv
+│  ├─ sample_submission.csv
+│  ├─ test_ratings.csv
+│  ├─ train_ratings.csv
+│  └─ users.csv
+├─ EDA.ipynb
+├─ README.md
+└─ readme_img
+   ├─ book_rating_image.PNG
+   └─ result.PNG
+
+```
