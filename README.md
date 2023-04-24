@@ -153,3 +153,6 @@ level1_bookratingprediction-recsys-05
    └─ result.PNG
 
 ```
+## 💻 Project Report
+[Wrap-Up Report Link](https://github.com/boostcampaitech5/level1_bookratingprediction-recsys-05/blob/main/Lv1_RecSys05_Wrap-Up%20Report.pdf)
+
