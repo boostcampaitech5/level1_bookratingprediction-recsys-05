@@ -96,28 +96,18 @@ level1_bookratingprediction-recsys-05
 │     │  │  ├─ CNN_FM_model.py
 │     │  │  ├─ __init__.py
 │     │  ├─ DCN
-│     │  │  ├─ best_model.pt
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ DCN_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ DCN_P
-│     │  │  ├─ best_model.pt
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ DCN_P_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ DeepCoNN
-│     │  │  ├─ best_model.pt
-│     │  │  ├─ best_params.json
 │     │  │  ├─ DeepCoNN_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ DeepFM
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ DeepFM_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
@@ -125,40 +115,26 @@ level1_bookratingprediction-recsys-05
 │     │  │  ├─ Ensemble_model.py
 │     │  │  ├─ __init__.py
 │     │  ├─ FFDCN
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ FFDCN_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ FFDCN_P
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ FFDCN_Parallel_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ FFM
-│     │  │  ├─ best_model.pt
-│     │  │  ├─ best_params.json
 │     │  │  ├─ FFM_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ FM
-│     │  │  ├─ best_model.pt
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ FM_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ NCF
-│     │  │  ├─ best_params.json
 │     │  │  ├─ NCF_model.py
 │     │  │  ├─ option.json
 │     │  │  ├─ __init__.py
 │     │  ├─ WDN
-│     │  │  ├─ .ipynb_checkpoints
-│     │  │  │  └─ WDN_model-checkpoint.py
-│     │  │  ├─ best_model.pth
-│     │  │  ├─ best_params.json
 │     │  │  ├─ option.json
 │     │  │  ├─ WDN_model.py
 │     │  │  ├─ __init__.py
@@ -170,12 +146,6 @@ level1_bookratingprediction-recsys-05
 │     ├─ utils.py
 │     ├─ __init__.py
 ├─ context_data.py
-├─ data
-│  ├─ books.csv
-│  ├─ sample_submission.csv
-│  ├─ test_ratings.csv
-│  ├─ train_ratings.csv
-│  └─ users.csv
 ├─ EDA.ipynb
 ├─ README.md
 └─ readme_img
