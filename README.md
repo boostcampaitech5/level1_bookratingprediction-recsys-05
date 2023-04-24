@@ -2,12 +2,12 @@
 
 &nbsp;
 ### RecSys_5조
-![image](readme_img/book_rating_image.png)
+![image](readme_img/book_rating_image.PNG)
 &nbsp;
 
 ### 🥈 최종 결과
 
-![image2](readme_img/result.png)
+![image2](readme_img/result.PNG)
 
 &nbsp;
 
